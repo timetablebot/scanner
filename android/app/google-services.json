@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "887755730408",
+    "firebase_url": "https://cafeteriascanner.firebaseio.com",
+    "project_id": "cafeteriascanner",
+    "storage_bucket": "cafeteriascanner.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:887755730408:android:923827d88399ed4b",
+        "android_client_info": {
+          "package_name": "de.lukweb.cafeteriascanner"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "887755730408-4knlgebqd7apvb4sia0fktl4kd4li455.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCf-DUs52lZWqsuqQu2raxLq9eoT8rktrw"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
