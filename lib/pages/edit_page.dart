@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:cafeteria_scanner/cafetertia.dart';
-import 'package:cafeteria_scanner/input_dialog.dart';
+import 'package:cafeteria_scanner/data/cafetertia.dart';
+import 'package:cafeteria_scanner/modals/input_dialog.dart';
 import 'package:flutter/material.dart';
 
 class EditPage extends StatefulWidget {
@@ -17,6 +17,8 @@ class EditPageState extends State<EditPage> {
   final Meal _meal;
 
   EditPageState({@required Meal meal}) : _meal = meal.copy();
+
+  // TODO: Add a remove button
 
   void _chooseDate() async {
     final date = await showDatePicker(
@@ -53,16 +55,34 @@ class EditPageState extends State<EditPage> {
       return;
     }
     try {
+      double price;
+      try {
+        price = double.parse(text);
+      } on FormatException {
+        _showSnackbar('Please enter a valid double as the price');
+        return;
+      }
+
+      if (price < 0) {
+        _showSnackbar('The price may not be smaller than zero');
+        return;
+      }
+
+      if (price > 100) {
+        _showSnackbar('The price may not be greater than 100');
+        return;
+      }
+
       setState(() {
-        _meal.price = double.parse(text);
+        _meal.price = price;
       });
-      // TODO: Add more checks
     } catch (ex) {
       print(ex);
     }
   }
 
   void _chooseDescription() async {
+    // TODO: Improve Multi-Line
     final text = await _chooseDialog(
       title: 'Description',
       initialText: _meal.description,
@@ -73,9 +93,17 @@ class EditPageState extends State<EditPage> {
       return;
     }
 
+    if (text.isEmpty) {
+      _showSnackbar('Warning: The description is empty');
+    }
+
     setState(() {
       _meal.description = text;
     });
+  }
+
+  void _showSnackbar(String text) {
+    Scaffold.of(context).showSnackBar(new SnackBar(content: new Text(text)));
   }
 
   Widget _buildBody() {
@@ -100,6 +128,17 @@ class EditPageState extends State<EditPage> {
           title: new Text("Description"),
           subtitle: new Text(_meal.description),
           onTap: _chooseDescription,
+        ),
+        new TextField(
+          maxLength: null,
+          controller: new TextEditingController.fromValue(
+            new TextEditingValue(
+              text: _meal.description,
+              selection: TextSelection.collapsed(
+                offset: _meal.description.length,
+              ),
+            ),
+          ),
         )
       ],
     );

@@ -1,4 +1,4 @@
-class Meal {
+class Meal extends Comparable<Meal> {
   Meal({this.day, this.vegetarian, this.price, this.description});
 
   DateTime day;
@@ -29,4 +29,31 @@ class Meal {
     }
     return string;
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      // TODO: Add day
+      'vegetarian': vegetarian,
+      'price': price,
+      'description': description
+    };
+  }
+
+  @override
+  int compareTo(Meal other) {
+   final compareDay = day.compareTo(other.day);
+   if (compareDay != 0) {
+     return compareDay;
+   }
+
+   if (vegetarian && !other.vegetarian) {
+     return 1;
+   } else if (!vegetarian && other.vegetarian) {
+     return -1;
+   } else {
+     return 0;
+   }
+  }
+
+
 }

@@ -18,7 +18,11 @@ dependencies:
 
   firebase_ml_vision: ^0.1.2
   image_picker: ^0.4.10
+  image_crop: ^0.1.1
   shared_preferences: ^0.4.3
+  diff_match_patch: ^0.3.0
+  # The next version 0.12.0 is available, but flutter_test doesn't support it.
+  http: ^0.11.3
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^0.1.2

@@ -1,7 +1,14 @@
-import 'package:cafeteria_scanner/input_dialog.dart';
-import 'package:cafeteria_scanner/show_page.dart';
-import 'package:cafeteria_scanner/source_picker.dart';
-import 'package:cafeteria_scanner/web_key.dart';
+import 'dart:io';
+
+import 'package:cafeteria_scanner/modals/input_dialog.dart';
+import 'package:cafeteria_scanner/modals/source_picker.dart';
+import 'package:cafeteria_scanner/pages/black_loading_page.dart';
+import 'package:cafeteria_scanner/data/cafetertia.dart';
+import 'package:cafeteria_scanner/pages/crop_page.dart';
+import 'package:cafeteria_scanner/data/meal_scanner.dart';
+import 'package:cafeteria_scanner/pages/select_page.dart';
+import 'package:cafeteria_scanner/pages/show_page.dart';
+import 'package:cafeteria_scanner/web/web_key.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -56,6 +63,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   Widget _sourcePicker;
+  bool _loading = false;
 
   void _alertWebKey() async {
     final setKey = await showDialog<bool>(
@@ -120,8 +128,47 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
-    Navigator.of(context).push(new MaterialPageRoute(
-      builder: (context) => ShowPage(image: image),
+    _scanFlow(image);
+  }
+
+  void _scanFlow(File image) async {
+    final nav = Navigator.of(context);
+
+    // Cropping
+
+    File cropped = await nav.push(new MaterialPageRoute(
+      builder: (context) => new CropPage(image),
+    ));
+
+    if (cropped == null) {
+      return;
+    }
+
+    // Scanner Init
+
+    nav.push(new MaterialPageRoute(
+      builder: (context) => new BlackLoadingPage(),
+    ));
+
+    var scanner = new MealScanner(cropped);
+    await scanner.scan();
+
+    nav.pop();
+
+    // Select boxes
+
+    List<Meal> meals = await nav.push(new MaterialPageRoute(
+      builder: (context) => new SelectSwipePage(scanner: scanner),
+    ));
+
+    if (meals == null) {
+      return;
+    }
+
+    // Show
+
+    nav.push(new MaterialPageRoute(
+      builder: (context) => new ShowPage(scanner: scanner),
     ));
   }
 
@@ -143,16 +190,24 @@ class _MyHomePageState extends State<MyHomePage> {
               tooltip: "Set the Web Key"),
         ],
       ),
-      body: new Center(
-        child: new Text(
-          'Select a image',
-          style: Theme.of(context).textTheme.display1,
-        ),
-      ),
+      body: _buildBody(context),
       floatingActionButton: new FloatingActionButton(
         onPressed: _pickImageSource,
         tooltip: 'Photo',
         child: new Icon(Icons.camera_alt),
+      ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    if (_loading) {
+      return Center(child: new CircularProgressIndicator());
+    }
+
+    return new Center(
+      child: new Text(
+        'Select a image',
+        style: Theme.of(context).textTheme.display1,
       ),
     );
   }
