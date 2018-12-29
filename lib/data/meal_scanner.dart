@@ -38,8 +38,9 @@ class MealScanner {
 
   Future<List<TextBlock>> _scanTextVision() async {
     final visionImage = FirebaseVisionImage.fromFile(_image);
-    final detector = FirebaseVision.instance.textDetector();
-    return await detector.detectInImage(visionImage);
+    final recognizer = FirebaseVision.instance.textRecognizer();
+    var visionText = await recognizer.processImage(visionImage);
+    return visionText.blocks;
   }
 
   Future<List<IdentifyBlock>> _findIdentifyBlocks(

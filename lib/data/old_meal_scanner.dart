@@ -62,8 +62,9 @@ class MealScanner {
 
   Future<List<TextBlock>> _scanTextVision() async {
     final visionImage = FirebaseVisionImage.fromFile(file);
-    final detector = FirebaseVision.instance.textDetector();
-    return await detector.detectInImage(visionImage);
+    final recognizer = FirebaseVision.instance.textRecognizer();
+    var visionText = await recognizer.processImage(visionImage);
+    return visionText.blocks;
   }
 
   Future<Rectangle<int>> _scanBindings() async {
@@ -313,6 +314,7 @@ class MealScanner {
 
   bool _areAddtivies(String text) {
     // only small, number, .,
+    return false;
   }
 
   Meal _generateMeal({int day, String text, double price, bool vegetarian}) {
