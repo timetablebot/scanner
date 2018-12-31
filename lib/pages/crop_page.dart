@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:image_crop/image_crop.dart';
 
 // https://pub.dartlang.org/packages/image_crop
-// TODO: Problem when first opening the app -> Nothing to crop
 
 class CropPage extends StatefulWidget {
   final File image;
@@ -38,7 +37,7 @@ class CropPageState extends State<CropPage> {
       children: <Widget>[
         Expanded(
           child: Crop.file(
-            image,
+            this.image,
             key: _cropKey,
           ),
         ),

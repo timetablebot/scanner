@@ -12,7 +12,7 @@ class MealScanner {
   DateTime _baseDate;
   List<IdentifyBlock> _identifyBlocks;
 
-  MealScanner(File file): _image = file;
+  MealScanner(File file) : _image = file;
 
   Future<void> scan() async {
     final textBlocks = await _scanTextVision();
@@ -132,8 +132,11 @@ class MealScanner {
   }
 
   File get image => _image;
+
   Size get imageSize => _imageSize;
+
   DateTime get baseDate => _baseDate;
+
   int get identifyCount => _identifyBlocks.length;
 
   DateTime getBaseDate() {
@@ -152,11 +155,39 @@ class MealScanner {
     return _identifyBlocks[element];
   }
 
+  bool canMerge(int element) {
+    if (element >= getIdentifyCount()) {
+      throw RangeError.range(element, 0, getIdentifyCount() - 1);
+    }
+
+    for (var i = element - 1; i >= 0; i--) {
+      if (getIdentifyBlock(i).count > 0) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   List<Meal> toMeals() {
     final list = new List<Meal>();
 
-    for (var block in _identifyBlocks) {
-      list.addAll(block.toMeals());
+    for (var i = 0; i < _identifyBlocks.length; ++i) {
+      var block = _identifyBlocks[i];
+
+      if (block.merge) {
+        // Merging with the meal before, if there's a meal before
+        if (list.length == 0) {
+          print("Warning: Can't merge with empty element");
+          list.addAll(block.toMeals());
+        } else {
+          list.last.description += "\n" + block.text;
+        }
+      } else {
+        // Just adding the meals to the list
+        list.addAll(block.toMeals());
+      }
+
     }
 
     return list;
@@ -176,11 +207,16 @@ class IdentifyBlock {
   IdentifyBlock({this.box, this.text});
 
   int get count => this._count;
+
   bool get active => this._count > 0;
 
+  bool get merge => this._count < 0;
+
+  // 0 -> nothing
+  // 1.. -> elements
   set count(int count) {
-    if (count < 0 || count > 2) {
-      throw RangeError.range(count, 0, 2);
+    if (count < 0 || count > 10) {
+      throw RangeError.range(count, 0, 10);
     }
 
     _count = count;
@@ -191,10 +227,18 @@ class IdentifyBlock {
     this.date = _baseDate.add(new Duration(days: addition));
   }
 
+  set merge(bool merge) {
+    if (merge) {
+      this._count = -1;
+    } else if (this._count == -1) {
+      this._count = 0;
+    }
+  }
+
   List<Meal> toMeals() {
     final list = new List<Meal>();
 
-    if (_count == 1) {
+    if (_count >= 1 || merge) {
       list.add(new Meal(
           day: date,
           vegetarian: vegetarian,
@@ -203,16 +247,21 @@ class IdentifyBlock {
     }
 
     if (_count >= 2) {
-      list.add(new Meal(
+      for (var i = 1; i < _count; i++) {
         // Going to the next entry
-          day: vegetarian ? date.add(Duration(days: 1)) : date,
-          vegetarian: !vegetarian,
+        final oldMeal = list.last;
+
+        list.add(new Meal(
+          day: oldMeal.vegetarian
+              ? oldMeal.day.add(Duration(days: 1))
+              : oldMeal.day,
+          vegetarian: !oldMeal.vegetarian,
           description: text,
-          price: !vegetarian ? 3.5 : 3.95));
+          price: !oldMeal.vegetarian ? 3.5 : 3.95,
+        ));
+      }
     }
 
     return list;
   }
-
-
 }

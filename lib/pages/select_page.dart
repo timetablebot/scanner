@@ -40,12 +40,13 @@ class SelectSwipePageState extends State<SelectSwipePage> {
     }
 
     var identify = scanner.getIdentifyBlock(page);
+    var canMerge = scanner.canMerge(page);
     return new Column(
       children: <Widget>[
         _buildOverlayImage(page),
         _buildDayBar(identify),
         _buildVegetarianBar(identify),
-        _buildCountBar(identify),
+        _buildCountBar(identify, canMerge),
         _buildGreyText(identify),
       ],
     );
@@ -91,10 +92,11 @@ class SelectSwipePageState extends State<SelectSwipePage> {
           child: new Text(
             weekNameMap[i],
           ),
-          onPressed: block.active ? () =>
-              setState(() {
-                block.weekday = i;
-              }) : null,
+          onPressed: block.active
+              ? () => setState(() {
+                    block.weekday = i;
+                  })
+              : null,
           padding: EdgeInsets.zero,
           textColor: active ? activeColor : defaultColor,
           disabledTextColor: disabledColor,
@@ -114,54 +116,104 @@ class SelectSwipePageState extends State<SelectSwipePage> {
       children: <Widget>[
         new IconButton(
           icon: new Icon(Icons.restaurant),
-          onPressed: block.active ? () =>
-              setState(() {
-                block.vegetarian = false;
-              }) : null,
+          onPressed: block.active
+              ? () => setState(() {
+                    block.vegetarian = false;
+                  })
+              : null,
           color: !block.vegetarian ? activeColor : defaultColor,
           disabledColor: disabledColor,
         ),
         new IconButton(
           icon: new Icon(Icons.local_florist),
-          onPressed: block.active ? () =>
-              setState(() {
-                block.vegetarian = true;
-              }) : null,
+          onPressed: block.active
+              ? () => setState(() {
+                    block.vegetarian = true;
+                  })
+              : null,
           color: block.vegetarian ? activeColor : defaultColor,
           disabledColor: disabledColor,
-
         )
       ],
       alignment: MainAxisAlignment.center,
     );
   }
 
-  Widget _buildCountBar(IdentifyBlock block) {
+  Widget _buildCountBar(IdentifyBlock block, bool canMerge) {
     final countButtons = new List<Widget>();
     final countMap = {
-      // TODO: Add a merge button (call_merge)
       0: Icons.panorama_fish_eye,
       1: Icons.control_point,
-      2: Icons.control_point_duplicate,
-      // TODO: Maybe show a slider
     };
+
+    countButtons.add(new IconButton(
+      icon: new Icon(Icons.merge_type),
+      onPressed: canMerge ? () {
+        setState(() {
+          block.merge = true;
+        });
+      } : null,
+      color: block.merge ? activeColor : defaultColor,
+      disabledColor: disabledColor,
+    ));
 
     for (var entry in countMap.entries) {
       final active = block.count == entry.key;
 
       countButtons.add(new IconButton(
         icon: new Icon(entry.value),
-        onPressed: () =>
-            setState(() {
+        onPressed: () => setState(() {
               block.count = entry.key;
             }),
         color: active ? activeColor : defaultColor,
       ));
     }
 
+    countButtons.add(new IconButton(
+      icon: new Icon(Icons.control_point_duplicate),
+      color: block.count >= 2 ? activeColor : defaultColor,
+      onPressed: () {
+        showModalBottomSheet(
+          context: context,
+          builder: (BuildContext context) => _buildMultipleModal(block),
+        );
+      },
+      tooltip: block.count == 1 ? "1 copy" : block.count.toString() + " copies",
+    ));
+
     return ButtonBar(
       children: countButtons,
       alignment: MainAxisAlignment.center,
+    );
+  }
+
+  _buildMultipleModal(IdentifyBlock block) {
+    final children = new List<Widget>();
+    for (var i = 2; i <= 5; i++) {
+      children.add(new FlatButton(
+        onPressed: () {
+          setState(() {
+            block.count = i;
+          });
+          Navigator.pop(context);
+        },
+        child: Text(
+          i.toString(),
+          style: TextStyle(
+            color: block.count == i ? activeColor : defaultColor,
+          ),
+          textScaleFactor: 1.25,
+        ),
+        padding: EdgeInsets.zero,
+      ));
+    }
+
+    return Container(
+      color: Colors.black,
+      child: Row(
+        children: children,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      ),
     );
   }
 
@@ -170,9 +222,7 @@ class SelectSwipePageState extends State<SelectSwipePage> {
       child: Center(
         child: new Text(
           identify.text,
-          style: new TextStyle(
-            color: Colors.grey,
-          ),
+          style: const TextStyle(color: Colors.grey),
         ),
       ),
     );
@@ -183,7 +233,7 @@ class SelectSwipePageState extends State<SelectSwipePage> {
       child: new FlatButton(
         child: new Text(
           "Finish",
-          style: TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.white),
         ),
         onPressed: _finishAction,
       ),

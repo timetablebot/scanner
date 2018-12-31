@@ -10,6 +10,7 @@ import 'package:cafeteria_scanner/pages/select_page.dart';
 import 'package:cafeteria_scanner/pages/show_page.dart';
 import 'package:cafeteria_scanner/web/web_key.dart';
 import 'package:flutter/material.dart';
+import 'package:image_crop/image_crop.dart';
 import 'package:image_picker/image_picker.dart';
 
 void main() => runApp(new MyApp());
