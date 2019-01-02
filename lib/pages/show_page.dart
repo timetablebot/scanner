@@ -1,7 +1,9 @@
 import 'package:cafeteria_scanner/data/cafetertia.dart';
 import 'package:cafeteria_scanner/modals/meal_amount.dart';
+import 'package:cafeteria_scanner/modals/text_dialog.dart';
 import 'package:cafeteria_scanner/pages/edit_page.dart';
 import 'package:cafeteria_scanner/data/meal_scanner.dart';
+import 'package:cafeteria_scanner/web/web_api.dart';
 import 'package:flutter/material.dart';
 
 class ShowPage extends StatefulWidget {
@@ -16,12 +18,13 @@ class ShowPage extends StatefulWidget {
 class ShowPageState extends State<ShowPage> {
   final List<Meal> _meals;
   final MealScanner scanner;
+  bool _uploading;
 
   ShowPageState(this.scanner) : _meals = scanner.toMeals() {
+    _uploading = false;
     _meals.sort();
   }
 
-  // TODO: Allow to mark two and merge them
   void _addMeal() async {
     final baseMeal = Meal(
       day: scanner.getBaseDate(),
@@ -38,10 +41,10 @@ class ShowPageState extends State<ShowPage> {
       return;
     }
 
-    _meals.add(newMeal);
-    _meals.sort();
-
-    setState(() {});
+    setState(() {
+      _meals.add(newMeal);
+      _meals.sort();
+    });
   }
 
   void _editMeal(Meal meal) async {
@@ -54,14 +57,14 @@ class ShowPageState extends State<ShowPage> {
       return;
     }
 
-    meal.day = newMeal.day;
-    meal.vegetarian = newMeal.vegetarian;
-    meal.price = newMeal.price;
-    meal.description = newMeal.description;
+    setState(() {
+      meal.day = newMeal.day;
+      meal.vegetarian = newMeal.vegetarian;
+      meal.price = newMeal.price;
+      meal.description = newMeal.description;
 
-    _meals.sort();
-
-    setState(() {});
+      _meals.sort();
+    });
   }
 
   void _editMealAmount(Meal meal, BuildContext context) async {
@@ -72,32 +75,70 @@ class ShowPageState extends State<ShowPage> {
       return;
     }
 
-    switch (action) {
-      case MealAmountAction.MERGE:
-        final index = _meals.indexOf(meal);
-        if (index == 0) {
-          Scaffold.of(context).showSnackBar(SnackBar(
-            content: Text('Can\'t merge the first element'),
-          ));
-          return;
-        }
-        final mergeMeal = _meals[index - 1];
-        mergeMeal.description += "\n" + meal.description;
-        _meals.removeAt(index);
-        break;
-      case MealAmountAction.DUPLICATE:
-        _meals.add(meal);
-        _meals.sort();
-        break;
-      case MealAmountAction.DELETE:
-        _meals.remove(meal);
-        break;
+    if (action == MealAmountAction.MERGE && _meals.indexOf(meal) == 0) {
+      Scaffold.of(context).showSnackBar(SnackBar(
+        content: Text('Can\'t merge the first element'),
+      ));
+      return;
     }
 
-    setState(() {});
+    setState(() {
+      switch (action) {
+        case MealAmountAction.MERGE:
+          final index = _meals.indexOf(meal);
+          final mergeMeal = _meals[index - 1];
+          mergeMeal.description += "\n" + meal.description;
+          _meals.removeAt(index);
+          break;
+        case MealAmountAction.DUPLICATE:
+          _meals.add(meal);
+          _meals.sort();
+          break;
+        case MealAmountAction.DELETE:
+          _meals.remove(meal);
+          break;
+      }
+    });
   }
 
-  void _upload() {}
+  Future<void> _upload() async {
+    if (_uploading) {
+      return;
+    }
+    setState(() {
+      _uploading = true;
+    });
+
+    // TODO: Catch error
+    final answer = await TimetableApi.uploadChanges(_meals);
+
+    setState(() {
+      _uploading = false;
+    });
+    if (!answer.wasError) {
+      // TODO: Show green check marks on save
+      // -> Difference between saved and updated
+      final text = 'Message: ${answer.message}\n' +
+          'Saved ${answer.updates.length} meals.';
+
+      showDialog(
+        context: context,
+        builder: (context) => TextDialog(title: 'Success', text: text),
+      );
+    } else {
+      var text = 'Message: ${answer.message}\n';
+      if (answer.error.externalError) {
+        text += 'Text: ${answer.error.full}';
+      } else {
+        text += 'Invalid JSON: ${answer.error.invalidJson}';
+      }
+
+      showDialog(
+        context: context,
+        builder: (context) => TextDialog(title: 'Error', text: text),
+      );
+    }
+  }
 
   Widget _buildBody() {
     return new ListView.builder(
@@ -146,9 +187,18 @@ class ShowPageState extends State<ShowPage> {
         ],
       ),
       floatingActionButton: new FloatingActionButton(
-        onPressed: _upload,
+        onPressed: _uploading ? null : _upload,
         tooltip: "Upload",
-        child: new Icon(Icons.file_upload),
+        child: _uploading
+            ? FractionallySizedBox(
+                heightFactor: 0.3,
+                widthFactor: 0.3,
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  strokeWidth: 3.0,
+                ),
+              )
+            : Icon(Icons.file_upload),
       ),
       body: _buildBody(),
     );
