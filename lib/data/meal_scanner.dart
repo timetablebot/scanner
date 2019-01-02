@@ -83,6 +83,11 @@ class MealScanner {
       var numbers = found.split("vom ").last;
       numbers = numbers.replaceAll(new RegExp(r"\D"), "");
 
+      if (numbers.length < 8) {
+        print("Warning: Can't extract date. String too short: $numbers");
+        return DateTime.now();
+      }
+
       var year = numbers.substring(numbers.length - 4);
       var month = numbers.substring(numbers.length - 6, numbers.length - 4);
       var day = numbers.substring(numbers.length - 8, numbers.length - 6);
