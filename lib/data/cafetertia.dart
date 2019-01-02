@@ -31,8 +31,10 @@ class Meal extends Comparable<Meal> {
   }
 
   Map<String, dynamic> toJson() {
+    final timeStart = DateTime.utc(1970);
+    final duration = timeStart.difference(day.toUtc());
     return {
-      // TODO: Add day
+      'day': duration.inDays,
       'vegetarian': vegetarian,
       'price': price,
       'description': description
