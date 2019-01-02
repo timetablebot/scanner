@@ -82,7 +82,6 @@ class EditPageState extends State<EditPage> {
   }
 
   void _chooseDescription() async {
-    // TODO: Improve Multi-Line
     final text = await _chooseDialog(
       title: 'Description',
       initialText: _meal.description,
@@ -128,17 +127,6 @@ class EditPageState extends State<EditPage> {
           title: new Text("Description"),
           subtitle: new Text(_meal.description),
           onTap: _chooseDescription,
-        ),
-        new TextField(
-          maxLength: null,
-          controller: new TextEditingController.fromValue(
-            new TextEditingValue(
-              text: _meal.description,
-              selection: TextSelection.collapsed(
-                offset: _meal.description.length,
-              ),
-            ),
-          ),
         )
       ],
     );
