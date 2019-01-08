@@ -28,8 +28,7 @@ class WebKey {
 
   void set(String key) async {
     _key = key;
-    final saved = await _prefs.setString('web_key', _key);
-    print("Saved? : " + saved.toString());
+    await _prefs.setString('web_key', _key);
   }
 
 }

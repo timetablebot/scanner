@@ -4,16 +4,23 @@ class InputDialog extends StatelessWidget {
   final String title;
   final String initialText;
   final TextInputType inputType;
+  final TextEditingController _controller;
 
   InputDialog(
       {@required this.title,
       this.initialText: '',
-      this.inputType: TextInputType.text});
+      this.inputType: TextInputType.text}):
+      _controller = _buildController(initialText);
+
+  static TextEditingController _buildController(String initialText) {
+    return TextEditingController.fromValue(TextEditingValue(
+      text: initialText,
+      selection: TextSelection.collapsed(offset: initialText.length),
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
-    String _textCopy;
-
     return SimpleDialog(
         title: Text(title),
         // Bottom 16 - 4, because we want only 20
@@ -24,13 +31,7 @@ class InputDialog extends StatelessWidget {
                 const EdgeInsets.symmetric(vertical: 8.0, horizontal: 24.0),
             child: new TextField(
               keyboardType: inputType,
-              controller:
-                  new TextEditingController.fromValue(new TextEditingValue(
-                text: initialText,
-                selection:
-                    new TextSelection.collapsed(offset: initialText.length),
-              )),
-              onChanged: (text) => _textCopy = text,
+              controller: _controller,
               onSubmitted: (text) => Navigator.of(context).pop(text),
               autofocus: true,
               maxLines: null,
@@ -45,7 +46,7 @@ class InputDialog extends StatelessWidget {
                 ),
                 FlatButton(
                   child: Text('Save'),
-                  onPressed: () => Navigator.of(context).pop(_textCopy),
+                  onPressed: () => Navigator.of(context).pop(_controller.text),
                 ),
               ],
             ),
