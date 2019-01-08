@@ -1,17 +1,21 @@
 class Meal extends Comparable<Meal> {
-  Meal({this.day, this.vegetarian, this.price, this.description});
+  Meal({this.day, this.vegetarian, this.price, this.description}) {
+    pushType = PushType.NONE;
+  }
 
   DateTime day;
   bool vegetarian;
   double price;
   String description;
+  PushType pushType;
 
   Meal copy() {
     return new Meal(
-        day: day,
-        vegetarian: vegetarian,
-        price: price,
-        description: description);
+      day: day,
+      vegetarian: vegetarian,
+      price: price,
+      description: description,
+    );
   }
 
   String formatDate() {
@@ -32,7 +36,7 @@ class Meal extends Comparable<Meal> {
 
   Map<String, dynamic> toJson() {
     final timeStart = DateTime.utc(1970);
-    final duration = timeStart.difference(day.toUtc());
+    final duration = day.toUtc().difference(timeStart);
     return {
       'day': duration.inDays,
       'vegetarian': vegetarian,
@@ -43,19 +47,23 @@ class Meal extends Comparable<Meal> {
 
   @override
   int compareTo(Meal other) {
-   final compareDay = day.compareTo(other.day);
-   if (compareDay != 0) {
-     return compareDay;
-   }
+    final compareDay = day.compareTo(other.day);
+    if (compareDay != 0) {
+      return compareDay;
+    }
 
-   if (vegetarian && !other.vegetarian) {
-     return 1;
-   } else if (!vegetarian && other.vegetarian) {
-     return -1;
-   } else {
-     return 0;
-   }
+    if (vegetarian && !other.vegetarian) {
+      return 1;
+    } else if (!vegetarian && other.vegetarian) {
+      return -1;
+    } else {
+      return 0;
+    }
   }
+}
 
-
+enum PushType {
+  ADDED,
+  UPDATED,
+  NONE,
 }

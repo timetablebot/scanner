@@ -105,13 +105,12 @@ class PushAnswer {
 }
 
 class PushedMeal {
+  // Saved in UTC
   final DateTime day;
   final bool vegetarian;
   final bool created;
 
   PushedMeal({this.day, this.vegetarian, this.created});
-
-  get updated => !created;
 }
 
 class PushError {

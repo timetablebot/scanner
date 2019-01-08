@@ -47,11 +47,24 @@ class ShowPageState extends State<ShowPage> {
     });
   }
 
+  void _removePushIcons() {
+    setState(() {
+      for (var meal in _meals) {
+        if (meal.pushType != PushType.NONE) {
+          meal.pushType = PushType.NONE;
+        }
+      }
+    });
+  }
+
   void _editMeal(Meal meal) async {
     final newMeal =
         await Navigator.of(context).push<Meal>(new MaterialPageRoute(
       builder: (context) => new EditPage(meal: meal),
     ));
+
+    // Removing the labels if it was uploaded
+    _removePushIcons();
 
     if (newMeal == null) {
       return;
@@ -109,22 +122,33 @@ class ShowPageState extends State<ShowPage> {
       _uploading = true;
     });
 
-    // TODO: Catch error
-    final answer = await TimetableApi.uploadChanges(_meals);
+    PushAnswer answer;
+    try {
+      answer = await TimetableApi.uploadChanges(_meals);
+    } catch (err) {
+      return;
+    }
 
     setState(() {
       _uploading = false;
     });
     if (!answer.wasError) {
-      // TODO: Show green check marks on save
-      // -> Difference between saved and updated
-      final text = 'Message: ${answer.message}\n' +
-          'Saved ${answer.updates.length} meals.';
+      final pushTypeMap = Map<Meal, PushType>();
 
-      showDialog(
-        context: context,
-        builder: (context) => TextDialog(title: 'Success', text: text),
-      );
+      for (var update in answer.updates) {
+        for (var meal in _meals) {
+          if (meal.vegetarian != update.vegetarian) continue;
+          if (meal.day.toUtc() != update.day) continue;
+          pushTypeMap[meal] =
+              update.created ? PushType.ADDED : PushType.UPDATED;
+        }
+      }
+
+      setState(() {
+        for (var entry in pushTypeMap.entries) {
+          entry.key.pushType = entry.value;
+        }
+      });
     } else {
       var text = 'Message: ${answer.message}\n';
       if (answer.error.externalError) {
@@ -154,9 +178,20 @@ class ShowPageState extends State<ShowPage> {
         }
 
         final meal = _meals[index];
+
+        IconData icon;
+        if (meal.pushType == PushType.ADDED) {
+          icon = Icons.label_important;
+        } else if (meal.pushType == PushType.UPDATED) {
+          icon = Icons.label;
+        } else if (meal.vegetarian) {
+          icon = Icons.local_florist;
+        } else {
+          icon = Icons.restaurant;
+        }
+
         return new ListTile(
-          leading: new Icon(
-              meal.vegetarian ? Icons.local_florist : Icons.restaurant),
+          leading: new Icon(icon),
           title: new Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
