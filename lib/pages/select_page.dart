@@ -173,6 +173,11 @@ class SelectSwipePageState extends State<SelectSwipePage> {
       icon: new Icon(Icons.control_point_duplicate),
       color: block.count >= 2 ? activeColor : defaultColor,
       onPressed: () {
+        if (block.count < 2) {
+          setState(() {
+            block.count = 2;
+          });
+        }
         showModalBottomSheet(
           context: context,
           builder: (BuildContext context) => _buildMultipleModal(block),

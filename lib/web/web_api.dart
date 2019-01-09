@@ -76,7 +76,7 @@ class TimetableApi {
         message: 'Can\'t accept this web key',
         updates: null,
         error: PushError(
-          full: '',
+          full: 'Invalid web key',
           invalidJson: null,
         ),
       );

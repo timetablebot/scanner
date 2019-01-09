@@ -126,12 +126,17 @@ class ShowPageState extends State<ShowPage> {
     try {
       answer = await TimetableApi.uploadChanges(_meals);
     } catch (err) {
+      showDialog(
+        context: context,
+        builder: (context) => TextDialog(title: 'Error', text: err.toString()),
+      );
       return;
+    } finally {
+      setState(() {
+        _uploading = false;
+      });
     }
 
-    setState(() {
-      _uploading = false;
-    });
     if (!answer.wasError) {
       final pushTypeMap = Map<Meal, PushType>();
 
@@ -181,9 +186,9 @@ class ShowPageState extends State<ShowPage> {
 
         IconData icon;
         if (meal.pushType == PushType.ADDED) {
-          icon = Icons.label_important;
+          icon = Icons.add_box;
         } else if (meal.pushType == PushType.UPDATED) {
-          icon = Icons.label;
+          icon = Icons.save;
         } else if (meal.vegetarian) {
           icon = Icons.local_florist;
         } else {
