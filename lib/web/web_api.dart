@@ -10,13 +10,25 @@ import 'package:cafeteria_scanner/web/web_key.dart';
 import 'package:http/http.dart' as http;
 
 class TimetableApi {
-  static const baseUrl = "https://api.stundenplanbot.ga/";
+  static const _baseUrl = "https://api.stundenplanbot.ga/";
+  static const _webKeyError = "Invalid web key";
 
-  static Future<String> _buildUrl(String method) async {
-    final webKey = await WebKey.instance();
-    if (!webKey.isSet()) {}
+  static Future<String> _buildUrl(String method, {String key}) async {
+    if (key == null) {
+      final webKey = await WebKey.instance();
+      if (!webKey.isSet()) {
+        // TODO: Handle
+      }
+      key = webKey.get();
+    }
 
-    return baseUrl + method + "?key=" + Uri.encodeQueryComponent(webKey.get());
+    return _baseUrl + method + "?key=" + Uri.encodeQueryComponent(key);
+  }
+
+  static Future<bool> testKey(String key) async {
+    final url = await _buildUrl('push/test', key: key);
+    final response = await http.post(url);
+    return response.statusCode == 200;
   }
 
   static Future<PushAnswer> uploadChanges(List<Meal> meals) async {
@@ -76,7 +88,7 @@ class TimetableApi {
         message: 'Can\'t accept this web key',
         updates: null,
         error: PushError(
-          full: 'Invalid web key',
+          full: _webKeyError,
           invalidJson: null,
         ),
       );
@@ -120,4 +132,6 @@ class PushError {
   PushError({this.full, this.invalidJson});
 
   get externalError => invalidJson == null;
+
+  get invalidWebKey => full == TimetableApi._webKeyError;
 }

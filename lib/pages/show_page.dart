@@ -1,8 +1,9 @@
 import 'package:cafeteria_scanner/data/cafetertia.dart';
+import 'package:cafeteria_scanner/data/meal_scanner.dart';
+import 'package:cafeteria_scanner/modals/key_input_dialog.dart';
 import 'package:cafeteria_scanner/modals/meal_amount.dart';
 import 'package:cafeteria_scanner/modals/text_dialog.dart';
 import 'package:cafeteria_scanner/pages/edit_page.dart';
-import 'package:cafeteria_scanner/data/meal_scanner.dart';
 import 'package:cafeteria_scanner/web/web_api.dart';
 import 'package:flutter/material.dart';
 
@@ -155,18 +156,52 @@ class ShowPageState extends State<ShowPage> {
         }
       });
     } else {
+      if (answer.error.invalidWebKey) {
+        showDialog(
+          context: context,
+          builder: (context) =>
+              TextDialog(
+                title: 'Error',
+                text: 'Server won\' accept this key',
+                button: FlatButton(
+                  onPressed: changeWebKey,
+                  child: Text('Change'),
+                ),
+              ),
+        );
+        return;
+      }
+
       var text = 'Message: ${answer.message}\n';
+      FlatButton button;
       if (answer.error.externalError) {
         text += 'Text: ${answer.error.full}';
+      } else if (answer.error.invalidWebKey) {
+        text = '';
+        button = FlatButton(
+          onPressed: changeWebKey,
+          child: Text('Change'),
+        );
       } else {
         text += 'Invalid JSON: ${answer.error.invalidJson}';
       }
 
       showDialog(
         context: context,
-        builder: (context) => TextDialog(title: 'Error', text: text),
+        builder: (context) =>
+            TextDialog(
+              title: 'Error',
+              text: text,
+              button: button,
+            ),
       );
     }
+  }
+
+  void changeWebKey() async {
+    Navigator.of(context).pop();
+    await showKeyInputDialog(context);
+    _upload();
   }
 
   Widget _buildBody() {

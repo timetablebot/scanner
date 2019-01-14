@@ -1,11 +1,12 @@
 import 'dart:io';
 
-import 'package:cafeteria_scanner/modals/input_dialog.dart';
+import 'package:cafeteria_scanner/data/cafetertia.dart';
+import 'package:cafeteria_scanner/data/meal_scanner.dart';
+import 'package:cafeteria_scanner/modals/key_input_dialog.dart';
 import 'package:cafeteria_scanner/modals/source_picker.dart';
 import 'package:cafeteria_scanner/pages/black_loading_page.dart';
-import 'package:cafeteria_scanner/data/cafetertia.dart';
 import 'package:cafeteria_scanner/pages/crop_page.dart';
-import 'package:cafeteria_scanner/data/meal_scanner.dart';
+import 'package:cafeteria_scanner/pages/home_page.dart';
 import 'package:cafeteria_scanner/pages/select_page.dart';
 import 'package:cafeteria_scanner/pages/show_page.dart';
 import 'package:cafeteria_scanner/web/web_key.dart';
@@ -34,7 +35,7 @@ class MyApp extends StatelessWidget {
 
         primarySwatch: Colors.blue,
       ),
-      home: new MyHomePage(title: 'CafeteriaScanner'),
+      home: HomePage(),
     );
   }
 }
@@ -71,22 +72,12 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _enterWebKey() async {
+  void _enterWebKey(BuildContext context) async {
     final webKey = await WebKey.instance();
-    final key = await showDialog<String>(
-        builder: (context) => new InputDialog(
-              title: "Set a key",
-              initialText: webKey.get() ?? '',
-            ),
-        context: context);
-
-    if (key == null) {
-      return;
-    }
-
-    webKey.set(key);
+    await showKeyInputDialog(context, webKey: webKey);
+    checkNSnack(webKey, context);
     setState(() {
-      _hasWebKey = key.isNotEmpty;
+      _hasWebKey = webKey.isSet();
     });
   }
 
@@ -155,13 +146,13 @@ class _MyHomePageState extends State<MyHomePage> {
         actions: <Widget>[
           new IconButton(
               icon: new Icon(Icons.vpn_key),
-              onPressed: _enterWebKey,
+              onPressed: () => _enterWebKey(context),
               tooltip: "Set a key"),
         ],
       ),
       body: _buildBody(context),
       floatingActionButton: new FloatingActionButton(
-        onPressed: _hasWebKey ? _pickImageSource : _enterWebKey,
+        onPressed: _hasWebKey ? _pickImageSource : () => _enterWebKey(context),
         tooltip: _hasWebKey ? 'Photo' : 'Key',
         child: new Icon(_hasWebKey ? Icons.camera_alt : Icons.vpn_key),
       ),

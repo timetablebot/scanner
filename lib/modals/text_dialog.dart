@@ -3,8 +3,25 @@ import 'package:flutter/material.dart';
 class TextDialog extends StatelessWidget {
   final String title;
   final String text;
+  final FlatButton button;
 
-  TextDialog({this.title, this.text});
+  TextDialog({@required this.title, @required this.text, this.button});
+
+  List<Widget> _buildButtons(BuildContext context) {
+    final list = new List<Widget>();
+
+    if (this.button != null) {
+      list.length = 2;
+      list.add(this.button);
+    }
+
+    list.add(FlatButton(
+      onPressed: () => Navigator.of(context).pop(),
+      child: Text('OK'),
+    ));
+
+    return list;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,14 +35,7 @@ class TextDialog extends StatelessWidget {
             child: Text(this.text),
           ),
         ),
-        ButtonBar(
-          children: <Widget>[
-            FlatButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('OK'),
-            )
-          ],
-        )
+        ButtonBar(children: _buildButtons(context))
       ],
     );
   }

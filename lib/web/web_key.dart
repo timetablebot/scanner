@@ -28,7 +28,8 @@ class WebKey {
 
   void set(String key) async {
     _key = key;
-    await _prefs.setString('web_key', _key);
+    // We're running this in the background
+    _prefs.setString('web_key', _key);
   }
 
 }
