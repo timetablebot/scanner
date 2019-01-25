@@ -49,7 +49,7 @@ Future<void> checkNSnack(WebKey webKey, BuildContext context) async {
   } else {
     snackBar = ColorSnackBars(
       context: context,
-      text: 'The key is invalid',
+      text: 'The key is not valid',
     ).failure();
   }
 

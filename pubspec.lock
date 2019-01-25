@@ -77,10 +77,10 @@ packages:
   image_crop:
     dependency: "direct main"
     description:
-      path: "rm_lib\\image_crop"
-      relative: true
-    source: path
-    version: "0.1.2"
+      name: image_crop
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.2.0"
   image_picker:
     dependency: "direct main"
     description:

@@ -3,6 +3,9 @@ class Meal extends Comparable<Meal> {
     pushType = PushType.NONE;
   }
 
+  Meal._duplicate(
+      {this.day, this.vegetarian, this.price, this.description, this.pushType});
+
   DateTime day;
   bool vegetarian;
   double price;
@@ -10,11 +13,12 @@ class Meal extends Comparable<Meal> {
   PushType pushType;
 
   Meal copy() {
-    return new Meal(
+    return new Meal._duplicate(
       day: day,
       vegetarian: vegetarian,
       price: price,
       description: description,
+      pushType: pushType,
     );
   }
 

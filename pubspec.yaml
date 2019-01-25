@@ -18,8 +18,7 @@ dependencies:
 
   firebase_ml_vision: ^0.2.0+2
   image_picker: ^0.4.10
-  image_crop:
-    path: ./rm_lib/image_crop
+  image_crop: ^0.2.0
   shared_preferences: ^0.4.3
   diff_match_patch: ^0.3.0
   # The next version 0.12.0 is available, but flutter_test doesn't support it.

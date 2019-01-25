@@ -105,7 +105,7 @@ class ShowPageState extends State<ShowPage> {
           _meals.removeAt(index);
           break;
         case MealAmountAction.DUPLICATE:
-          _meals.add(meal);
+          _meals.add(meal.copy());
           _meals.sort();
           break;
         case MealAmountAction.DELETE:
