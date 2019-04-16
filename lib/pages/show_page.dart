@@ -1,16 +1,18 @@
 import 'package:cafeteria_scanner/data/cafetertia.dart';
 import 'package:cafeteria_scanner/data/meal_scanner.dart';
-import 'package:cafeteria_scanner/modals/key_input_dialog.dart';
 import 'package:cafeteria_scanner/modals/meal_amount.dart';
 import 'package:cafeteria_scanner/modals/text_dialog.dart';
 import 'package:cafeteria_scanner/pages/edit_page.dart';
 import 'package:cafeteria_scanner/web/web_api.dart';
+import 'package:cafeteria_scanner/web/web_connection.dart';
 import 'package:flutter/material.dart';
 
 class ShowPage extends StatefulWidget {
   final scanner;
+  final WebConnection connection;
 
-  ShowPage({Key key, @required this.scanner}) : super(key: key);
+  ShowPage({Key key, @required this.scanner, @required this.connection})
+      : super(key: key);
 
   @override
   State<StatefulWidget> createState() => new ShowPageState(scanner);
@@ -125,7 +127,7 @@ class ShowPageState extends State<ShowPage> {
 
     PushAnswer answer;
     try {
-      answer = await TimetableApi.uploadChanges(_meals);
+      answer = await TimetableApi.uploadChanges(widget.connection, _meals);
     } catch (err) {
       showDialog(
         context: context,
@@ -162,11 +164,9 @@ class ShowPageState extends State<ShowPage> {
           builder: (context) =>
               TextDialog(
                 title: 'Error',
-                text: 'Server won\' accept this key',
-                button: FlatButton(
-                  onPressed: changeWebKey,
-                  child: Text('Change'),
-                ),
+                text:
+                'The Push Key has been changed on the server. ' +
+                    'Please reconnect on the home screen!',
               ),
         );
         return;
@@ -176,12 +176,6 @@ class ShowPageState extends State<ShowPage> {
       FlatButton button;
       if (answer.error.externalError) {
         text += 'Text: ${answer.error.full}';
-      } else if (answer.error.invalidWebKey) {
-        text = '';
-        button = FlatButton(
-          onPressed: changeWebKey,
-          child: Text('Change'),
-        );
       } else {
         text += 'Invalid JSON: ${answer.error.invalidJson}';
       }
@@ -196,12 +190,6 @@ class ShowPageState extends State<ShowPage> {
             ),
       );
     }
-  }
-
-  void changeWebKey() async {
-    Navigator.of(context).pop();
-    await showKeyInputDialog(context);
-    _upload();
   }
 
   Widget _buildBody() {

@@ -14,7 +14,11 @@ class ColorSnackBars {
             padding: const EdgeInsets.all(4.0),
             child: Icon(icon),
           ),
-          Text('The key is valid'),
+          Expanded(
+            child: Text(
+              this.text,
+            ),
+          ),
         ],
       ),
       backgroundColor: color,

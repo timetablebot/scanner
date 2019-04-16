@@ -53,20 +53,23 @@ class SelectSwipePageState extends State<SelectSwipePage> {
   }
 
   Widget _buildOverlayImage(int page) {
-    return FittedBox(
-      child: new Container(
-        width: scanner.imageSize.width / 2,
-        height: scanner.imageSize.height / 2,
-        // constraints: BoxConstraints.expand(height: 300.0),
-        decoration: new BoxDecoration(
-          image: new DecorationImage(
-            image: new FileImage(scanner.image),
-            fit: BoxFit.fill,
+    return Expanded(
+      child: FittedBox(
+        fit: BoxFit.contain,
+        child: new Container(
+          width: scanner.imageSize.width / 2,
+          height: scanner.imageSize.height / 2,
+          // constraints: BoxConstraints.expand(height: 300.0),
+          decoration: new BoxDecoration(
+            image: new DecorationImage(
+              image: new FileImage(scanner.image),
+              fit: BoxFit.fill,
+            ),
           ),
-        ),
-        child: new CustomPaint(
-          painter: new TextBoxPainter(scanner, page),
-          willChange: false,
+          child: new CustomPaint(
+            painter: new TextBoxPainter(scanner, page),
+            willChange: false,
+          ),
         ),
       ),
     );
@@ -148,11 +151,13 @@ class SelectSwipePageState extends State<SelectSwipePage> {
 
     countButtons.add(new IconButton(
       icon: new Icon(Icons.merge_type),
-      onPressed: canMerge ? () {
+      onPressed: canMerge
+          ? () {
         setState(() {
           block.merge = true;
         });
-      } : null,
+      }
+          : null,
       color: block.merge ? activeColor : defaultColor,
       disabledColor: disabledColor,
     ));
@@ -223,7 +228,8 @@ class SelectSwipePageState extends State<SelectSwipePage> {
   }
 
   _buildGreyText(IdentifyBlock identify) {
-    return Expanded(
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
       child: Center(
         child: new Text(
           identify.text,

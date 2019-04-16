@@ -1,40 +1,59 @@
-// TODO: Add request
 // https://flutter.io/cookbook/networking/fetch-data/
 // https://pub.dartlang.org/packages/http
 // https://flutter.io/cookbook/networking/background-parsing/
 
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:cafeteria_scanner/data/cafetertia.dart';
-import 'package:cafeteria_scanner/web/web_key.dart';
-import 'package:http/http.dart' as http;
+import 'package:cafeteria_scanner/web/web_connection.dart';
+import 'package:connectivity/connectivity.dart';
 
 class TimetableApi {
-  static const _baseUrl = "https://api.stundenplanbot.ga/";
   static const _webKeyError = "Invalid web key";
 
-  static Future<String> _buildUrl(String method, {String key}) async {
-    if (key == null) {
-      final webKey = await WebKey.instance();
-      if (!webKey.isSet()) {
-        // TODO: Handle
-      }
-      key = webKey.get();
+  static Future<TestResult> testKeyConn(WebConnection conn) async {
+    final connectivity = await Connectivity().checkConnectivity();
+    if (connectivity == ConnectivityResult.none) {
+      return TestResult.no_connection;
     }
 
-    return _baseUrl + method + "?key=" + Uri.encodeQueryComponent(key);
+    try {
+      final response =
+      await conn.post('push/test').timeout(const Duration(seconds: 5));
+
+      switch (response.statusCode) {
+        case 200:
+          return TestResult.success;
+        case 302:
+          return TestResult.redirect;
+        case 401:
+          return TestResult.unauthorized;
+        case 501:
+          return TestResult.push_key_config;
+        default:
+          return TestResult.not_found;
+      }
+    } on TimeoutException catch (_) {
+      return TestResult.timeout;
+    } on SocketException catch (e) {
+      print(e);
+
+      if (e.message.toLowerCase().contains('failed host lookup')) {
+        return TestResult.not_found;
+      }
+
+      return TestResult.error;
+    } catch (e) {
+      print(e);
+      return TestResult.error;
+    }
   }
 
-  static Future<bool> testKey(String key) async {
-    final url = await _buildUrl('push/test', key: key);
-    final response = await http.post(url);
-    return response.statusCode == 200;
-  }
-
-  static Future<PushAnswer> uploadChanges(List<Meal> meals) async {
-    // TODO: Throw error
-    final url = await _buildUrl('push');
-    final response = await http.post(url, body: json.encode(meals));
+  static Future<PushAnswer> uploadChanges(WebConnection conn,
+      List<Meal> meals) async {
+    final response = await conn.post('push', body: json.encode(meals));
     final contentType = response.headers['Content-Type'];
 
     if (response.statusCode == 200) {
@@ -85,7 +104,7 @@ class TimetableApi {
     } else if (response.statusCode == 401) {
       // Wrong web key
       return PushAnswer(
-        message: 'Can\'t accept this web key',
+        message: 'Invalid Push Key',
         updates: null,
         error: PushError(
           full: _webKeyError,
@@ -104,6 +123,17 @@ class TimetableApi {
       );
     }
   }
+}
+
+enum TestResult {
+  success,
+  unauthorized,
+  push_key_config,
+  redirect,
+  not_found,
+  error,
+  no_connection,
+  timeout,
 }
 
 class PushAnswer {
