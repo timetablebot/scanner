@@ -125,23 +125,36 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class _PhotoActionButton extends StatelessWidget {
+class _PhotoActionButton extends StatefulWidget {
   final WebConnection connection;
   final VoidCallback onCredentialsInvalid;
 
   _PhotoActionButton({this.connection, this.onCredentialsInvalid});
 
+  @override
+  _PhotoActionButtonState createState() => _PhotoActionButtonState();
+}
+
+class _PhotoActionButtonState extends State<_PhotoActionButton> {
+  bool _testingConnection = false;
+
   bool _isConnAvailable() {
-    return this.connection != null;
+    return this.widget.connection != null;
   }
 
   Future<bool> _checkConnectionBeforeStart(BuildContext context) async {
     if (!_isConnAvailable()) {
-      onCredentialsInvalid();
+      widget.onCredentialsInvalid();
       return false;
     }
 
-    final result = await TimetableApi.testKeyConn(connection);
+    setState(() {
+      _testingConnection = true;
+    });
+    final result = await TimetableApi.testKeyConn(widget.connection);
+    setState(() {
+      _testingConnection = false;
+    });
     if (result == TestResult.success) {
       return true;
     }
@@ -166,7 +179,7 @@ class _PhotoActionButton extends StatelessWidget {
       ).failure();
       Scaffold.of(context).showSnackBar(snackBar);
 
-      onCredentialsInvalid();
+      widget.onCredentialsInvalid();
     }
 
     Scaffold.of(context).hideCurrentSnackBar();
@@ -251,7 +264,7 @@ class _PhotoActionButton extends StatelessWidget {
       builder: (context) =>
       new ShowPage(
         scanner: scanner,
-        connection: connection,
+        connection: widget.connection,
       ),
     ));
   }
@@ -260,11 +273,14 @@ class _PhotoActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton(
       child: Icon(Icons.camera_alt),
-      backgroundColor: _isConnAvailable() ? null : Colors.grey,
+      backgroundColor:
+      _isConnAvailable() && !_testingConnection ? null : Colors.grey,
       tooltip: _isConnAvailable()
           ? 'Take a photo'
           : 'First connect, then you can take a photo',
-      onPressed: _isConnAvailable() ? () => _pickImage(context, true) : null,
+      onPressed: _isConnAvailable() && !_testingConnection
+          ? () => _pickImage(context, true)
+          : null,
     );
   }
 }
