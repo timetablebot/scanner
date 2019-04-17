@@ -144,37 +144,43 @@ class _PhotoActionButton extends StatelessWidget {
     final result = await TimetableApi.testKeyConn(connection);
     if (result == TestResult.success) {
       return true;
-    } else if (result == TestResult.no_connection) {
-      final snackBar = ColorSnackBars(
-          context: context, text: 'There is no connection to the internet')
-          .failure();
-      Scaffold.of(context).showSnackBar(snackBar);
+    }
 
-      return false;
+    SnackBar snackBar;
+
+    if (result == TestResult.no_connection) {
+      snackBar = ColorSnackBars(
+        text: 'There is no connection to the internet',
+        actionText: 'Ignore',
+        onActionPressed: () => _pickImage(context, false),
+      ).warning();
     } else if (result == TestResult.timeout) {
-      final snackBar = ColorSnackBars(
-          context: context, text: 'Couldn\'t connect to the API (timeout)')
-          .failure();
-      Scaffold.of(context).showSnackBar(snackBar);
-
-      return false;
+      snackBar = ColorSnackBars(
+        text: 'Couldn\'t connect to the API (timeout)',
+        actionText: 'Ignore',
+        onActionPressed: () => _pickImage(context, false),
+      ).warning();
     } else {
-      final snackBar = ColorSnackBars(
-          context: context,
-          text: 'Please reconnect to your API. There was an error!')
-          .failure();
+      snackBar = ColorSnackBars(
+        text: 'Please reconnect to your API. There was an error!',
+      ).failure();
       Scaffold.of(context).showSnackBar(snackBar);
 
       onCredentialsInvalid();
-
-      return false;
     }
+
+    Scaffold.of(context).hideCurrentSnackBar();
+    Scaffold.of(context).showSnackBar(snackBar);
+
+    return false;
   }
 
-  void _pickImage(BuildContext context) async {
-    // Abort if the credentials changed and are now invalid
-    if (!await _checkConnectionBeforeStart(context)) {
-      return;
+  void _pickImage(BuildContext context, bool checkCredentials) async {
+    if (checkCredentials) {
+      // Abort if the credentials changed and are now invalid
+      if (!await _checkConnectionBeforeStart(context)) {
+        return;
+      }
     }
 
     final source = await showModalBottomSheet<ImageSource>(
@@ -220,7 +226,6 @@ class _PhotoActionButton extends StatelessWidget {
       nav.pop();
 
       final snackBar = ColorSnackBars(
-          context: context,
           text: 'The scanner could find any results: ${e.runtimeType}')
           .failure();
       Scaffold.of(context).showSnackBar(snackBar);
@@ -259,7 +264,7 @@ class _PhotoActionButton extends StatelessWidget {
       tooltip: _isConnAvailable()
           ? 'Take a photo'
           : 'First connect, then you can take a photo',
-      onPressed: _isConnAvailable() ? () => _pickImage(context) : null,
+      onPressed: _isConnAvailable() ? () => _pickImage(context, true) : null,
     );
   }
 }

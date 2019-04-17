@@ -17,7 +17,6 @@ class ConnectPageState extends State<ConnectPage> {
     final result = await TimetableApi.testKeyConn(conn);
 
     final colorSnackBar = ColorSnackBars(
-      context: context,
       text: _getTestResultText(result),
     );
     final snackBar = result == TestResult.success
